@@ -1,34 +1,61 @@
-import express, { json, urlencoded, Application, RequestHandler } from 'express';
-import Mongoose from 'mongoose';
-import Server from './server';
-import config from './config/constant';
-import cors from 'cors';
-import compression from 'compression';
+import express, { json, urlencoded } from "express";
+import { connect } from "mongoose";
+import http from "http";
+import config from "./config/constant";
+import cors from "cors";
+import compression from "compression";
+import routes from "./routes";
+import notFoundHandler from "./middleware/not-found.middleware";
+import errorHandler from "./middleware/error.middleware";
 
-const app: Application = express();
-const server: Server = new Server(app, Mongoose, config.port);
+class App {
+  public app: express.Application;
 
-const routes: Array<RequestHandler> = [
-   
-];
+  constructor() {
+    this.app = express();
+    this.loadMiddleWares();
+    this.loadRoutes();
+  }
 
-const corsOptions = {
-    origin: "*",
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
-    optionsSuccessStatus: 204,
-};
+  // Middlewares
+  private loadMiddleWares(): void {
+    this.app.use(json());
+    this.app.use(urlencoded({ extended: false }));
+    this.app.use(
+      cors({
+        origin: "*",
+        methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+        optionsSuccessStatus: 204,
+      })
+    );
+    this.app.use(compression());
+  }
 
-const globalMiddleware: Array<RequestHandler> = [
-    urlencoded({ extended: false }),
-    json(),
-    cors(corsOptions),
-    compression(),
-];
+  // Routes
+  private loadRoutes(): void {
+    routes(this.app);
+    this.app.use(notFoundHandler);
+    this.app.use(errorHandler);
+  }
 
-Promise.resolve()
-    .then(() => server.initDatabase())
-    .then(() => {
-        server.loadMiddleware(globalMiddleware);
-        server.loadRoutes(routes);
-        server.run();
+  // Database Connection Initialization
+  public async initDatabase(): Promise<void> {
+    try {
+      await connect(
+        config.db[config.env === "development" ? "development" : "production"]
+      );
+      console.log("Database connected successfully");
+    } catch (err) {
+      console.error("Could not connect to db", err);
+    }
+  }
+
+  //  Express server
+  public run(): http.Server {
+    return this.app.listen(config.port, () => {
+      console.log(`The server is running on port ${config.port}`);
     });
+  }
+}
+
+export default App;
