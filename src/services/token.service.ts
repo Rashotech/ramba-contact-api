@@ -72,31 +72,12 @@ export default class TokenService {
     user: IUserDocument
   ): Promise<IAuthTokens> {
     try {
-      const accessTokenExpires = moment().add(
-        config.jwtAcessExpirationMinutes,
-        "minutes"
-      );
-      const accessToken = this.generateToken(
-        user._id,
-        accessTokenExpires,
-        "access"
-      );
+      const accessTokenExpires = moment().add(config.jwtAcessExpirationMinutes, "minutes");
+      const accessToken = this.generateToken(user._id, accessTokenExpires, "access");
 
-      const refreshTokenExpires = moment().add(
-        config.jwtRefreshExpirationDays,
-        "days"
-      );
-      const refreshToken = this.generateToken(
-        user.id,
-        refreshTokenExpires,
-        "refresh"
-      );
-      await this.saveToken(
-        refreshToken,
-        user.id,
-        refreshTokenExpires,
-        "refresh"
-      );
+      const refreshTokenExpires = moment().add(config.jwtRefreshExpirationDays, "days");
+      const refreshToken = this.generateToken(user.id, refreshTokenExpires, "refresh");
+      await this.saveToken(refreshToken, user.id, refreshTokenExpires, "refresh");
 
       return {
         access: {
