@@ -4,9 +4,10 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "build": "rimraf ./build && tsc",
+    "build": "rimraf ./dist && tsc",
     "dev": "nodemon",
-    "start": "npm run build && node build/server.js",
+    "start": "node dist/server.js",
+    "postinstall": "npm run build",
     "test": "mocha --require ts-node/register src/**/*.test.ts",
     "lint": "eslint . --ext .ts"
   },
