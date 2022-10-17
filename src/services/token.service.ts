@@ -1,9 +1,9 @@
 import httpStatus from "http-status";
 import Token from "../models/token.model";
 import moment, { Moment } from "moment";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import ApiError from "../helpers/ApiError";
-import { IToken, IAuthTokens } from "../interfaces/token.interface";
+import { IAuthTokens } from "../interfaces/token.interface";
 import config from "../config/constant";
 import { IUserDocument } from "../interfaces/user.interface";
 
@@ -50,19 +50,12 @@ export default class TokenService {
   }
 
   //  Method that verifies JWT Token
-  public static async verifyToken(
-    token: string,
-    type: string
-  ): Promise<IToken> {
+  public static verifyToken(token: string): JwtPayload | string {
     try {
       const payload = jwt.verify(token, config.jwtSecret);
-      const tokenDoc = await Token.findOne({ token, type, user: payload.sub });
-      if (!tokenDoc) {
-        throw new Error("Token not found");
-      }
-      return tokenDoc;
-    } catch (e) {
-      console.log(e);
+      return payload;
+    } catch (error) {
+      console.log(error);
       throw new ApiError(httpStatus.BAD_REQUEST, "An error occured");
     }
   }
